@@ -6,6 +6,9 @@ import time
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import WebDriverException
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
 
 class SystemWebdriver(object):
 
@@ -16,7 +19,6 @@ class SystemWebdriver(object):
 
     @staticmethod
     def is_loaded(webdriver):
-        print(webdriver.execute_script("return document.readyState"))
         return webdriver.execute_script("return document.readyState") == "complete"
     
     @staticmethod
@@ -26,10 +28,37 @@ class SystemWebdriver(object):
             time.sleep(0.1)
 
     @staticmethod
-    def open_url(webdriver, url ):    
+    def await_is_clickable(webdriver, xpath):
+        WebDriverWait(webdriver, 20).until(EC.element_to_be_clickable((By.XPATH, xpath)))
+
+        
+    @staticmethod
+    def await_is_present(webdriver, name_class):
+        list_element = webdriver.find_elements_by_class_name(name_class)
+        print(len(list_element))
+        while(len(list_element) == 0):
+            print(len(list_element))
+            sys.stdout.flush()
+            list_element = webdriver.find_elements_by_class_name(name_class)
+            time.sleep(0.1)
+
+    @staticmethod
+    def open_url(webdriver, url):    
         #if not self.current_url == url:
         webdriver.get(url)
         SystemWebdriver.await_is_loaded(webdriver)
+
+    @staticmethod
+    def find_first_tag_with_innerhtml(webdriver, tag, inner_html):
+        list_element_button = webdriver.find_elements_by_tag_name(tag)
+        for element_button in list_element_button:
+            if element_button.get_attribute('innerHTML') == inner_html:
+                return element_button
+
+    @staticmethod
+    def open_tab(webdriver):
+        webdriver.execute_script("window.open('');")
+        return webdriver.window_handles[-1]
 
     def save(self):
         pass
@@ -80,3 +109,4 @@ class SystemWebdriver(object):
         if not self.is_alive(driver):
             driver = self.session_create_new(path_file_session, path_dir_userdata)
         return driver
+

@@ -5,46 +5,26 @@ import sys
 import os
 import pathlib
 
+
+
 sys.path.append('../')
-from bigbreaker.instagram.pagemanager_instagram import PagemanagerInstagram
+from bigbreaker.common.tools_identity import ToolsIdentity
 from bigbreaker.common.system_webdriver import SystemWebdriver
+from bigbreaker.onionmail.tab_manager_onionmail import TabManagerOnionmail
+from bigbreaker.instagram.tab_manager_instagram import TabManagerInstagram
 
-path_file_executable = 'C:\\project\\chromedriver_win32\\chromedriver.exe'
+with open('config.cfg', 'r') as file:
+    config = json.load(file)
 
-path_file_session = 'session.json'
-path_file_identity = 'identity.json'
-path_dir_user_data = os.path.join(str(pathlib.Path().absolute()), 'selenium')
+id_identity = 'identity_1'
+identity = ToolsIdentity.identity_load(config, id_identity)
+webdriver = ToolsIdentity.webdriver_load(config, id_identity)
+handle_onionmail = webdriver.window_handles[0]
+handle_instagram = SystemWebdriver.open_tab(webdriver)
 
-system_webdriver = SystemWebdriver(path_file_executable)
-driver = system_webdriver.get_webdriver(path_file_session, path_dir_user_data)
+tab_manager_onionmail = TabManagerOnionmail(webdriver, handle_onionmail) 
+tab_manager_instagram = TabManagerInstagram(webdriver, handle_instagram, tab_manager_onionmail)
 
-
-
-def create_identity():
-    size_password = 12
-    with open('list_first_name.txt', encoding='ascii', errors='ignore') as file:
-        list_name_first = file.readlines()
-    with open('list_first_name.txt', encoding='ascii', errors='ignore') as file:
-        list_name_last = file.readlines()
-    identity = {}
-    identity['name_first_0']  = random.choice(list_name_first).strip()
-    identity['name_last_0']   = random.choice(list_name_last).strip()
-    identity['onionmail_username'] = ''.join(random.choices(string.ascii_lowercase + string.ascii_uppercase + string.digits, k=size_password))
-    identity['onionmail_address']  = ''.join(random.choices(string.ascii_lowercase + string.ascii_uppercase + string.digits, k=size_password))
-    identity['onionmail_password'] = ''.join(random.choices(string.ascii_lowercase + string.ascii_uppercase + string.digits, k=size_password))
-    return identity
-
-if os.path.isfile(path_file_identity):
-    with open(path_file_identity, 'r') as file:
-        identity = json.load(file)
-else:
-    identity = create_identity()
-    with open(path_file_identity, 'w') as file:
-        json.dump(identity, file)\
-            
-page_manager = PagemanagerOnionmail(driver)
-# page_manager.action_create_account()
-# page_manager.action_login(identity)
-page_manager.action_get_email_most_recent(identity)
-
-#<input type="text" class="form-control" name="name" id="name" placeholder="eg. &quot;Jaan Tamm&quot;" value="" required="">
+tab_manager_instagram.action_create_account(identity)
+identity['instagram_is_created'] = True
+ToolsIdentity.identity_save(config, id_identity, identity)
