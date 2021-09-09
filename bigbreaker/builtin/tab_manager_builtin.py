@@ -26,22 +26,43 @@ class TabManagerBuiltin:
     def action_load_list_jobitem(self):
         print('action_load_list_jobitem')
         self.make_active()
-        SystemWebdriver.open_url(self.webdriver, 'https://www.builtinnyc.com/jobs/office-remote/new-york-city/data-analytics/senior?ni=4')
+        # url = 'https://www.builtinnyc.com/jobs/office-remote/new-york-city/data-analytics/senior?ni=4'
+        url = 'https://www.builtinnyc.com/jobs/office-remote/new-york-city/data-analytics/data-science/machine-learning/senior?ni=4'
+        SystemWebdriver.open_url(self.webdriver, url)
+        list_jobitem = []
         SystemWebdriver.await_is_present(self.webdriver, 'job-row')
         list_element_jobitem = self.webdriver.find_elements_by_class_name('job-item')
-        list_jobitem = []
         for element_jobitem in list_element_jobitem:
             list_jobitem.append(self.parse_element_jobitem(element_jobitem))
+        
+        count_page = 1
+        list_element_pagelink = self.webdriver.find_elements_by_class_name('page-link')
+        for pagelink in list_element_pagelink:
+            try:
+                count_page = max(count_page, int(pagelink.get_attribute("innerHTML")))
+            except:
+                pass
+ 
+        for index_page in range(2, count_page + 1):
+            print(index_page)
+            url = 'https://www.builtinnyc.com/jobs/office-remote/new-york-city/data-analytics/data-science/machine-learning/senior?ni=4&page=' + str(index_page)
+            SystemWebdriver.open_url(self.webdriver, url)
+            SystemWebdriver.await_is_present(self.webdriver, 'job-row')
+            list_element_jobitem = self.webdriver.find_elements_by_class_name('job-item')
+            for element_jobitem in list_element_jobitem:
+                list_jobitem.append(self.parse_element_jobitem(element_jobitem))
+
         return list_jobitem
+
+
 
     def parse_element_jobitem(self, element_jobitem):
         jobitem = {}
-        
         jobitem['title'] = element_jobitem.find_element_by_class_name("job-title").get_attribute("innerHTML")
         jobitem['url_jobitem'] = element_jobitem.find_element_by_class_name("external-link").get_attribute("href")
         jobitem['description'] = element_jobitem.find_element_by_class_name("job-description").get_attribute("innerHTML")
         jobitem['id_jobitem'] = jobitem['url_jobitem'].split('/')[-1]
-        
+        jobitem['name_company'] = element_jobitem.find_element_by_class_name("basic-info").find_elements_by_tag_name("span")[0].get_attribute("innerHTML")
         return jobitem
         
 #     def load_list_email_reference_recent(self):
@@ -56,6 +77,4 @@ class TabManagerBuiltin:
 #             email_reference['datetime'] = element.find_element_by_class_name("datestring-fixed").get_attribute("title")
 #             list_email_reference.append(email_reference)
 #         return list_email_reference
-            
-
         

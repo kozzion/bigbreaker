@@ -28,19 +28,23 @@ class SystemWebdriver(object):
             time.sleep(0.1)
 
     @staticmethod
-    def await_is_clickable(webdriver, xpath):
-        WebDriverWait(webdriver, 20).until(EC.element_to_be_clickable((By.XPATH, xpath)))
+    def await_is_clickable(webdriver, xpath, timeout_s=20):
+        WebDriverWait(webdriver, timeout_s).until(EC.element_to_be_clickable((By.XPATH, xpath)))
 
         
     @staticmethod
-    def await_is_present(webdriver, name_class):
+    def await_is_present(webdriver, name_class, timeout_s=20, verbose=False):
         list_element = webdriver.find_elements_by_class_name(name_class)
-        print(len(list_element))
-        while(len(list_element) == 0):
-            print(len(list_element))
-            sys.stdout.flush()
+        for i in range(int(timeout_s/0.1)):
             list_element = webdriver.find_elements_by_class_name(name_class)
+            if 0 < len(list_element):
+                return True
+
             time.sleep(0.1)
+            if verbose:
+                print('sleep')
+                sys.stdout.flush()
+        return False
 
     @staticmethod
     def open_url(webdriver, url):    
@@ -54,6 +58,12 @@ class SystemWebdriver(object):
         for element_button in list_element_button:
             if element_button.get_attribute('innerHTML') == inner_html:
                 return element_button
+
+    @staticmethod
+    def get_handle(webdriver, index_handle):
+        while(len(webdriver.window_handles) < index_handle + 1):
+            SystemWebdriver.open_tab(webdriver)
+        return webdriver.window_handles[index_handle]
 
     @staticmethod
     def open_tab(webdriver):
